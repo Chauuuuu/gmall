@@ -6,7 +6,10 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.util.Date;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 商品属性
@@ -18,6 +21,8 @@ import lombok.Data;
 @ApiModel
 @Data
 @TableName("pms_attr")
+@AllArgsConstructor
+@NoArgsConstructor
 public class AttrEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
