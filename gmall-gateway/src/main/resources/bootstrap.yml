@@ -1,10 +1,10 @@
 spring:
   application:
-    name: pms-service
+    name: gateway-service
   cloud:
     nacos:
       config:
         server-addr: 127.0.0.1:8848
-        namespace: 8b022703-32b7-4e2f-a004-700e696585d3
+        namespace: 467381b6-8232-4f2b-9e04-7d6aad426f1c
         group: dev
         file-extension: yml

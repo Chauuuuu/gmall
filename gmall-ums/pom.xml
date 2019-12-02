@@ -12,11 +12,12 @@
 	<artifactId>gmall-ums</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>gmall-ums</name>
-	<description>Demo project for Spring Boot</description>
+	<description>用户管理系统</description>
 
 	<properties>
 		<java.version>1.8</java.version>
 		<spring-cloud.version>Hoxton.RELEASE</spring-cloud.version>
+		<mysql.version>5.1.46</mysql.version>
 	</properties>
 
 	<dependencies>

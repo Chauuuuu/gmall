@@ -1,6 +1,6 @@
 spring:
   application:
-    name: pms-service
+    name: oms-service
   cloud:
     nacos:
       config:
