@@ -8,3 +8,6 @@ spring:
         namespace: 89eaa2ee-9706-4b0c-a300-17e26b37ffa4
         group: dev
         file-extension: yml
+logging:
+  level:
+    com.atguigu: debug
