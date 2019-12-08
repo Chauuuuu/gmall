@@ -1,5 +1,8 @@
 package com.atguigu.gmall.sms.service.impl;
 
+import com.atguigu.gmall.sms.vo.SkuSaleVo;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.Map;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -12,10 +15,14 @@ import com.atguigu.core.bean.QueryCondition;
 import com.atguigu.gmall.sms.dao.SkuLadderDao;
 import com.atguigu.gmall.sms.entity.SkuLadderEntity;
 import com.atguigu.gmall.sms.service.SkuLadderService;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service("skuLadderService")
 public class SkuLadderServiceImpl extends ServiceImpl<SkuLadderDao, SkuLadderEntity> implements SkuLadderService {
+
+    @Autowired
+    private SkuLadderDao skuLadderDao;
 
     @Override
     public PageVo queryPage(QueryCondition params) {
@@ -25,6 +32,15 @@ public class SkuLadderServiceImpl extends ServiceImpl<SkuLadderDao, SkuLadderEnt
         );
 
         return new PageVo(page);
+    }
+
+    @Transactional
+    @Override
+    public void skuLadderSave(SkuSaleVo skuSaleVo) {
+        SkuLadderEntity skuLadderEntity = new SkuLadderEntity();
+        BeanUtils.copyProperties(skuSaleVo, skuLadderEntity);
+        skuLadderEntity.setAddOther(skuSaleVo.getLadderAddOther());
+        this.skuLadderDao.insert(skuLadderEntity);
     }
 
 }

@@ -1,5 +1,7 @@
 package com.atguigu.gmall.pms.service;
 
+import com.atguigu.gmall.pms.vo.SkuInfoVo;
+import com.atguigu.gmall.pms.vo.SpuInfoVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.atguigu.gmall.pms.entity.SkuInfoEntity;
 import com.atguigu.core.bean.PageVo;
@@ -20,5 +22,7 @@ public interface SkuInfoService extends IService<SkuInfoEntity> {
     PageVo queryPage(QueryCondition params);
 
     List<SkuInfoEntity> querySkusBySpuId(Long spuId);
+
+    void saveSkuInfo(SpuInfoVo spuInfoVo, Long spuId);
 }
 

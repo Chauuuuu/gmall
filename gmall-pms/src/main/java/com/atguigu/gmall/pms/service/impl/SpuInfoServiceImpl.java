@@ -1,19 +1,17 @@
 package com.atguigu.gmall.pms.service.impl;
 
-import com.atguigu.gmall.pms.controller.ProductAttrValueController;
 import com.atguigu.gmall.pms.dao.AttrDao;
 import com.atguigu.gmall.pms.dao.SkuInfoDao;
 import com.atguigu.gmall.pms.dao.SpuInfoDescDao;
 import com.atguigu.gmall.pms.entity.*;
 import com.atguigu.gmall.pms.feign.GmallSmsClient;
-import com.atguigu.gmall.pms.service.ProductAttrValueService;
-import com.atguigu.gmall.pms.service.SkuImagesService;
-import com.atguigu.gmall.pms.service.SkuSaleAttrValueService;
+import com.atguigu.gmall.pms.service.*;
 import com.atguigu.gmall.pms.vo.ProductAttrValueVo;
 import com.atguigu.gmall.pms.vo.SkuInfoVo;
 import com.atguigu.gmall.pms.vo.SpuInfoVo;
 import com.atguigu.gmall.sms.vo.SkuSaleVo;
-import org.apache.commons.lang.StringUtils;
+import io.seata.spring.annotation.GlobalTransactional;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +27,7 @@ import com.atguigu.core.bean.Query;
 import com.atguigu.core.bean.QueryCondition;
 
 import com.atguigu.gmall.pms.dao.SpuInfoDao;
-import com.atguigu.gmall.pms.service.SpuInfoService;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 
@@ -37,19 +35,13 @@ import org.springframework.util.CollectionUtils;
 public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> implements SpuInfoService {
 
     @Autowired
-    private SpuInfoDescDao spuInfoDescDao;
-    @Autowired
     private ProductAttrValueService productAttrValueService;
+
     @Autowired
-    private SkuImagesService skuImagesService;
+    private SpuInfoDescService spuInfoDescService;
+
     @Autowired
-    private AttrDao attrDao;
-    @Autowired
-    private SkuSaleAttrValueService skuSaleAttrValueService;
-    @Autowired
-    private GmallSmsClient gmallSmsClient;
-    @Autowired
-    private SkuInfoDao skuInfoDao;
+    private SkuInfoService skuInfoService;
 
     @Override
     public PageVo queryPage(QueryCondition params) {
@@ -75,75 +67,31 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         return new PageVo(this.page(page, wrapper));
     }
 
+    @GlobalTransactional
     @Override
     public void bigSave(SpuInfoVo spuInfoVo) {
-        System.out.println(spuInfoVo);
+        Long spuId = saveSpuInfo(spuInfoVo);
+
+        spuInfoDescService.saveSpuInfoDesc(spuInfoVo,spuId);
+
+        productAttrValueService.saveProductAttrValue(spuInfoVo, spuId);
+
+        saveSkuInfoAndSale(spuInfoVo, spuId);
+        int i = 1/0;
+    }
+
+    private void saveSkuInfoAndSale(SpuInfoVo spuInfoVo, Long spuId) {
+
+        skuInfoService.saveSkuInfo(spuInfoVo, spuId);
+    }
+
+
+    private Long saveSpuInfo(SpuInfoVo spuInfoVo) {
         spuInfoVo.setPublishStatus(1);
         spuInfoVo.setCreateTime(new Date());
         spuInfoVo.setUodateTime(spuInfoVo.getCreateTime());
         this.save(spuInfoVo);
-
         Long spuId = spuInfoVo.getId();
-        SpuInfoDescEntity spuInfoDescEntity = new SpuInfoDescEntity();
-        spuInfoDescEntity.setSpuId(spuId);
-        spuInfoDescEntity.setDecript(org.apache.commons.lang3.StringUtils.join(spuInfoVo.getSpuImages(), ","));
-        spuInfoDescDao.insert(spuInfoDescEntity);
-
-        List<ProductAttrValueVo> baseAttrs = spuInfoVo.getBaseAttrs();
-        if (!CollectionUtils.isEmpty(baseAttrs)) {
-            List<ProductAttrValueEntity> productAttrValueEntityList = baseAttrs.stream()
-                    .map(productAttrValueVo -> {
-                        ProductAttrValueEntity productAttrValueEntity = productAttrValueVo;
-                        productAttrValueVo.setQuickShow(0);
-                        productAttrValueVo.setAttrSort(0);
-                        productAttrValueVo.setSpuId(spuId);
-                        return productAttrValueVo;
-                    }).collect(Collectors.toList());
-            productAttrValueService.saveBatch(productAttrValueEntityList);
-        }
-
-        List<SkuInfoVo> skus = spuInfoVo.getSkus();
-        if (CollectionUtils.isEmpty(skus)){
-            return;
-        }
-        skus.forEach(skuInfoVo ->{
-            SkuInfoEntity skuInfoEntity = new SkuInfoEntity();
-            BeanUtils.copyProperties(skuInfoVo, skuInfoEntity);
-            skuInfoEntity.setSkuCode(UUID.randomUUID().toString().substring(0,10));
-            skuInfoEntity.setBrandId(spuInfoVo.getBrandId());
-            skuInfoEntity.setCatalogId(spuInfoVo.getCatalogId());
-            List<String> images = skuInfoVo.getImages();
-            if (!CollectionUtils.isEmpty(images)){
-                skuInfoEntity.setSkuDefaultImg(skuInfoEntity.getSkuDefaultImg()==null ? images.get(0) : skuInfoEntity.getSkuDefaultImg());
-            }
-            skuInfoEntity.setSpuId(spuId);
-            this.skuInfoDao.insert(skuInfoEntity);
-            Long skuId = skuInfoEntity.getSkuId();
-
-            if (!CollectionUtils.isEmpty(images)){
-                String defaultImage = images.get(0);
-                List<SkuImagesEntity> skuImagesEntityList = images.stream().map(image -> {
-                    SkuImagesEntity skuImagesEntity = new SkuImagesEntity();
-                    skuImagesEntity.setSkuId(skuId);
-                    skuImagesEntity.setImgSort(0);
-                    skuImagesEntity.setDefaultImg(StringUtils.equals(defaultImage, image) ? 1 : 0);
-                    skuImagesEntity.setImgUrl(image);
-                    return skuImagesEntity;
-                }).collect(Collectors.toList());
-                skuImagesService.saveBatch(skuImagesEntityList);
-            }
-            List<SkuSaleAttrValueEntity> saleAttrs = skuInfoVo.getSaleAttrs();
-            saleAttrs.forEach(saleAttr ->{
-                saleAttr.setSkuId(skuId);
-                saleAttr.setAttrSort(0);
-                saleAttr.setAttrName(this.attrDao.selectById(saleAttr.getAttrId()).getAttrName());
-            });
-            this.skuSaleAttrValueService.saveBatch(saleAttrs);
-
-            SkuSaleVo skuSaleVo = new SkuSaleVo();
-            BeanUtils.copyProperties(skuInfoVo, skuSaleVo);
-            skuSaleVo.setSkuId(skuId);
-            gmallSmsClient.saveSale(skuSaleVo);
-        });
+        return spuId;
     }
 }
