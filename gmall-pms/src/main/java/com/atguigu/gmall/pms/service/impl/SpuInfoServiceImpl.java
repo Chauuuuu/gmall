@@ -77,7 +77,16 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         productAttrValueService.saveProductAttrValue(spuInfoVo, spuId);
 
         saveSkuInfoAndSale(spuInfoVo, spuId);
-        int i = 1/0;
+//        int i = 1/0;
+    }
+
+    @Override
+    public PageVo querySpuInfoByStatus(QueryCondition condition, Integer status) {
+        IPage<SpuInfoEntity> page = this.page(
+                new Query<SpuInfoEntity>().getPage(condition),
+                new QueryWrapper<SpuInfoEntity>().eq("publish_status", status)
+        );
+        return new PageVo(page);
     }
 
     private void saveSkuInfoAndSale(SpuInfoVo spuInfoVo, Long spuId) {

@@ -2,6 +2,7 @@ package com.atguigu.gmall.pms.service.impl;
 
 import com.atguigu.gmall.pms.vo.ProductAttrValueVo;
 import com.atguigu.gmall.pms.vo.SpuInfoVo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +25,9 @@ import org.springframework.util.CollectionUtils;
 
 @Service("productAttrValueService")
 public class ProductAttrValueServiceImpl extends ServiceImpl<ProductAttrValueDao, ProductAttrValueEntity> implements ProductAttrValueService {
+
+    @Autowired
+    private ProductAttrValueDao productAttrValueDao;
 
     @Override
     public PageVo queryPage(QueryCondition params) {
@@ -50,6 +54,12 @@ public class ProductAttrValueServiceImpl extends ServiceImpl<ProductAttrValueDao
                     }).collect(Collectors.toList());
             this.saveBatch(productAttrValueEntityList);
         }
+    }
+
+    @Override
+    public List<ProductAttrValueEntity> querySearchAttrValue(Long spuId) {
+        List<ProductAttrValueEntity> attrValues = productAttrValueDao.querySearchAttrValue(spuId);
+        return attrValues;
     }
 
 }

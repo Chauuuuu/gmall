@@ -41,6 +41,12 @@ public class SpuInfoController {
         return Resp.ok(page);
     }
 
+    @GetMapping("${status}")
+    public Resp<PageVo> querySpuInfoByStatus(QueryCondition condition,@PathVariable("status")Integer status){
+        PageVo page = spuInfoService.querySpuInfoByStatus(condition,status);
+        return Resp.ok(page);
+    }
+
     /**
      * 列表
      */

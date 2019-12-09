@@ -1,4 +1,4 @@
-package com.atguigu.gmall.sms.feign;
+package com.atguigu.gmall.sms.api;
 
 import com.atguigu.core.bean.Resp;
 import com.atguigu.gmall.sms.vo.SkuSaleVo;
