@@ -30,8 +30,8 @@ public class Goods {
     private Double price;
     @Field(type = FieldType.Long)
     private Long sale;
-    @Field(type = FieldType.Long)
-    private Long stock;
+    @Field(type = FieldType.Boolean)
+    private Boolean stock;
     @Field(type = FieldType.Date)
     private Date createTime;
 

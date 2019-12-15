@@ -2,9 +2,12 @@ package com.atguigu.gmall.pms.service.impl;
 
 import com.atguigu.gmall.pms.dao.AttrAttrgroupRelationDao;
 import com.atguigu.gmall.pms.dao.AttrDao;
+import com.atguigu.gmall.pms.dao.ProductAttrValueDao;
 import com.atguigu.gmall.pms.entity.AttrAttrgroupRelationEntity;
 import com.atguigu.gmall.pms.entity.AttrEntity;
+import com.atguigu.gmall.pms.entity.ProductAttrValueEntity;
 import com.atguigu.gmall.pms.vo.AttrGroupVo;
+import com.atguigu.gmall.pms.vo.ItemGroupVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,9 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
 
     @Autowired
     private AttrDao attrDao;
+
+    @Autowired
+    private ProductAttrValueDao productAttrValueDao;
 
     @Autowired
     private AttrGroupDao attrGroupDao;
@@ -78,6 +84,22 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
         List<AttrGroupEntity> attrGroups = this.list(new QueryWrapper<AttrGroupEntity>().eq("catelog_id", catId));
         List<AttrGroupVo> vos = attrGroups.stream().map(attrGroupEntity -> this.queryAttrByGroupId(attrGroupEntity.getAttrGroupId())).collect(Collectors.toList());
         return vos;
+    }
+
+    @Override
+    public List<ItemGroupVo> queryItemGroupByCatIdAndSpuId(Long catId, Long spuId) {
+        List<AttrGroupEntity> attrGroupEntities = this.list(new QueryWrapper<AttrGroupEntity>().eq("catelog_id", catId));
+        List<ItemGroupVo> itemGroupVoList = attrGroupEntities.stream().map(attrGroupEntity -> {
+            ItemGroupVo itemGroupVo = new ItemGroupVo();
+            itemGroupVo.setName(attrGroupEntity.getAttrGroupName());
+            List<AttrAttrgroupRelationEntity> attrgroupRelationEntities = attrAttrgroupRelationDao.selectList(new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_group_id", attrGroupEntity.getAttrGroupId()));
+            List<Long> attrIds = attrgroupRelationEntities.stream().map(attrAttrgroupRelationEntity ->
+                    attrAttrgroupRelationEntity.getAttrId()).collect(Collectors.toList());
+            List<ProductAttrValueEntity> productAttrValueEntityList = productAttrValueDao.selectList(new QueryWrapper<ProductAttrValueEntity>().eq("spu_id", spuId).in("attr_id", attrIds));
+            itemGroupVo.setBaseAttrs(productAttrValueEntityList);
+            return itemGroupVo;
+        }).collect(Collectors.toList());
+        return itemGroupVoList;
     }
 
 }

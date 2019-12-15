@@ -3,5 +3,11 @@ spring:
     nacos:
       config:
         server-addr: 127.0.0.1:8848
+        namespace: ebedd4b4-3056-463b-86c4-794090e6634e
+        group: dev
+        file-extension: yml
   application:
     name: search-service
+
+
+

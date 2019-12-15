@@ -1,6 +1,7 @@
 package com.atguigu.gmall.pms.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 
@@ -13,6 +14,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gmall.pms.entity.SpuInfoEntity;
@@ -41,10 +43,10 @@ public class SpuInfoController {
         return Resp.ok(page);
     }
 
-    @GetMapping("${status}")
-    public Resp<PageVo> querySpuInfoByStatus(QueryCondition condition,@PathVariable("status")Integer status){
-        PageVo page = spuInfoService.querySpuInfoByStatus(condition,status);
-        return Resp.ok(page);
+    @PostMapping("{status}")
+    public Resp<List<SpuInfoEntity>> querySpuInfoByStatus(@RequestBody QueryCondition condition, @PathVariable("status")Integer status){
+        List<SpuInfoEntity> list = spuInfoService.querySpuInfoByStatus(condition,status);
+        return Resp.ok(list);
     }
 
     /**

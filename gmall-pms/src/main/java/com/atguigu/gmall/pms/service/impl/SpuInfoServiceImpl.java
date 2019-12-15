@@ -12,8 +12,10 @@ import com.atguigu.gmall.pms.vo.SpuInfoVo;
 import com.atguigu.gmall.sms.vo.SkuSaleVo;
 import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -43,6 +45,12 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     @Autowired
     private SkuInfoService skuInfoService;
 
+    @Autowired
+    private AmqpTemplate amqpTemplate;
+
+    @Value("${item.rabbitmq.exchange}")
+    private String EXCHANGE_NAME;
+
     @Override
     public PageVo queryPage(QueryCondition params) {
         IPage<SpuInfoEntity> page = this.page(
@@ -51,6 +59,10 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         );
 
         return new PageVo(page);
+    }
+
+    public void sendQueue(String type,Long spuId){
+        amqpTemplate.convertAndSend(EXCHANGE_NAME, "item."+type,spuId);
     }
 
     @Override
@@ -77,16 +89,17 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         productAttrValueService.saveProductAttrValue(spuInfoVo, spuId);
 
         saveSkuInfoAndSale(spuInfoVo, spuId);
-//        int i = 1/0;
+
+        sendQueue("insert", spuId);
     }
 
     @Override
-    public PageVo querySpuInfoByStatus(QueryCondition condition, Integer status) {
+    public List<SpuInfoEntity> querySpuInfoByStatus(QueryCondition condition, Integer status) {
         IPage<SpuInfoEntity> page = this.page(
                 new Query<SpuInfoEntity>().getPage(condition),
                 new QueryWrapper<SpuInfoEntity>().eq("publish_status", status)
         );
-        return new PageVo(page);
+        return page.getRecords();
     }
 
     private void saveSkuInfoAndSale(SpuInfoVo spuInfoVo, Long spuId) {

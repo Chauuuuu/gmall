@@ -1,0 +1,3 @@
+item:
+  rabbitmq:
+    exchange: GMALL-PMS-EXCHANGE
