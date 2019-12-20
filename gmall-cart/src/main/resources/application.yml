@@ -1,0 +1,21 @@
+server:
+  port: 8090
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  redis:
+    host: 192.168.175.66
+  rabbitmq:
+    host: 192.168.175.66
+    virtual-host: /chau
+    username: Chau
+    password: 123123
+
+gmall:
+  jwt:
+    pubKeyPath: D:\\workspace-idea\\gmall\\rsa\\rsa.pub # 公钥地址
+    cookieName: GMALL_TOKEN # cookie的名称
+    userKeyName: user-key # 未登录购物车的唯一标识
+    expire: 43200 # 过期时间，一个月

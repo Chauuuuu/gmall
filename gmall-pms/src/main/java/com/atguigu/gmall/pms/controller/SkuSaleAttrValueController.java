@@ -34,6 +34,12 @@ public class SkuSaleAttrValueController {
     @Autowired
     private SkuSaleAttrValueService skuSaleAttrValueService;
 
+    @GetMapping("sku/{skuId}")
+    public Resp<List<SkuSaleAttrValueEntity>> querySkuAttrValuesBySkuId(@PathVariable("skuId")Long skuId){
+        List<SkuSaleAttrValueEntity> skuSaleAttrValueEntities = skuSaleAttrValueService.querySkuAttrValuesBySkuId(skuId);
+        return Resp.ok(skuSaleAttrValueEntities);
+    }
+
     @GetMapping("{spuId}")
     public Resp<List<SkuSaleAttrValueEntity>> querySkuAttrValuesBySpuId(@PathVariable("spuId")Long spuId){
         List<SkuSaleAttrValueEntity> skuSaleAttrValueEntities = skuSaleAttrValueService.querySkuAttrValuesBySpuId(spuId);

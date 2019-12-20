@@ -18,6 +18,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Service
 public class ItemServiceImpl implements ItemService{
@@ -28,46 +30,76 @@ public class ItemServiceImpl implements ItemService{
     private GmallSmsClient gmallSmsClient;
     @Autowired
     private GmallWmsClient gmallWmsClient;
+    @Autowired
+    private ThreadPoolExecutor threadPoolExecutor;
 
     @Override
     public ItemVo querySkuDetails(Long skuId) {
         ItemVo itemVo = new ItemVo();
-        SkuInfoEntity skuInfoEntity = gmallPmsClient.querySkuInfoBySkuId(skuId).getData();
-        if (skuInfoEntity != null){
-            BeanUtils.copyProperties(skuInfoEntity, itemVo);
-        }
-        Long spuId = skuInfoEntity.getSpuId();
-        List<SkuImagesEntity> imagesEntities = gmallPmsClient.querySkuImagesBySkuId(skuId).getData();
-        if (!CollectionUtils.isEmpty(imagesEntities)){
-            itemVo.setPics(imagesEntities);
-        }
-        SpuInfoEntity spuInfoEntity = gmallPmsClient.querySpuById(spuId).getData();
-        itemVo.setSpuName(spuInfoEntity.getSpuName());
-        BrandEntity brandEntity = gmallPmsClient.queryBrandByBrandId(skuInfoEntity.getBrandId()).getData();
-        itemVo.setBrandEntity(brandEntity);
-        CategoryEntity categoryEntity = gmallPmsClient.queryCategoryByCatId(skuInfoEntity.getCatalogId()).getData();
-        itemVo.setCategoryEntity(categoryEntity);
 
-        List<SaleVo> saleVos = gmallSmsClient.querySaleBySkuId(skuId).getData();
-        itemVo.setSales(saleVos);
+        CompletableFuture<SkuInfoEntity> skuInfoEntityCompletableFuture = CompletableFuture.supplyAsync(() -> {
+            SkuInfoEntity skuInfoEntity = gmallPmsClient.querySkuInfoBySkuId(skuId).getData();
+            if (skuInfoEntity != null) {
+                BeanUtils.copyProperties(skuInfoEntity, itemVo);
+            }
+            return skuInfoEntity;
+        }, threadPoolExecutor);
 
-        List<WareSkuEntity> wareSkuEntities = gmallWmsClient.queryWareBySkuId(skuId).getData();
-        boolean stock = wareSkuEntities.stream().anyMatch(wareSkuEntity -> wareSkuEntity.getStock() > 0);
-        itemVo.setStore(stock);
+        CompletableFuture<Void> setImages = CompletableFuture.runAsync(() -> {
+            List<SkuImagesEntity> imagesEntities = gmallPmsClient.querySkuImagesBySkuId(skuId).getData();
+            if (!CollectionUtils.isEmpty(imagesEntities)) {
+                itemVo.setPics(imagesEntities);
+            }
+        }, threadPoolExecutor);
 
-        List<SkuSaleAttrValueEntity> saleAttrValueEntities = gmallPmsClient.querySkuAttrValuesBySpuId(spuId).getData();
-        itemVo.setSaleAttrs(saleAttrValueEntities);
+        CompletableFuture<Void> setSpuName = skuInfoEntityCompletableFuture.thenAcceptAsync(sku -> {
+            SpuInfoEntity spuInfoEntity = gmallPmsClient.querySpuById(sku.getSpuId()).getData();
+            itemVo.setSpuName(spuInfoEntity.getSpuName());
+        }, threadPoolExecutor);
+
+        CompletableFuture<Void> setBrandEntity = skuInfoEntityCompletableFuture.thenAcceptAsync(sku -> {
+            BrandEntity brandEntity = gmallPmsClient.queryBrandByBrandId(sku.getBrandId()).getData();
+            itemVo.setBrandEntity(brandEntity);
+        }, threadPoolExecutor);
+
+        CompletableFuture<Void> setCategoryEntity = skuInfoEntityCompletableFuture.thenAcceptAsync(sku -> {
+            CategoryEntity categoryEntity = gmallPmsClient.queryCategoryByCatId(sku.getCatalogId()).getData();
+            itemVo.setCategoryEntity(categoryEntity);
+        }, threadPoolExecutor);
+
+        CompletableFuture<Void> setSales = CompletableFuture.runAsync(() -> {
+            List<SaleVo> saleVos = gmallSmsClient.querySaleBySkuId(skuId).getData();
+            itemVo.setSales(saleVos);
+        }, threadPoolExecutor);
+
+        CompletableFuture<Void> setStore = CompletableFuture.runAsync(() -> {
+            List<WareSkuEntity> wareSkuEntities = gmallWmsClient.queryWareBySkuId(skuId).getData();
+            boolean stock = wareSkuEntities.stream().anyMatch(wareSkuEntity -> wareSkuEntity.getStock() > 0);
+            itemVo.setStore(stock);
+        }, threadPoolExecutor);
+
+        CompletableFuture<Void> setSaleAttrs = skuInfoEntityCompletableFuture.thenAcceptAsync(sku -> {
+            List<SkuSaleAttrValueEntity> saleAttrValueEntities = gmallPmsClient.querySkuAttrValuesBySpuId(sku.getSpuId()).getData();
+            itemVo.setSaleAttrs(saleAttrValueEntities);
+        }, threadPoolExecutor);
 
         //spu海报
-        SpuInfoDescEntity spuInfoDescEntity = gmallPmsClient.querySpuDescBySpuId(spuId).getData();
-        if (spuInfoDescEntity!=null){
-            String decript = spuInfoDescEntity.getDecript();
-            String[] split = StringUtils.split(decript, ",");
-            itemVo.setImages(Arrays.asList(split));
-        }
+        CompletableFuture<Void> setSpuDesc = skuInfoEntityCompletableFuture.thenAcceptAsync(sku -> {
+            SpuInfoDescEntity spuInfoDescEntity = gmallPmsClient.querySpuDescBySpuId(sku.getSpuId()).getData();
+            if (spuInfoDescEntity != null) {
+                String decript = spuInfoDescEntity.getDecript();
+                String[] split = StringUtils.split(decript, ",");
+                itemVo.setImages(Arrays.asList(split));
+            }
+        }, threadPoolExecutor);
 
-        List<ItemGroupVo> itemGroupVoList = gmallPmsClient.queryItemGroupByCatIdAndSpuId(skuInfoEntity.getCatalogId(), spuId).getData();
-        itemVo.setGroups(itemGroupVoList);
+        CompletableFuture<Void> setGroups = skuInfoEntityCompletableFuture.thenAcceptAsync(sku -> {
+            List<ItemGroupVo> itemGroupVoList = gmallPmsClient.queryItemGroupByCatIdAndSpuId(sku.getCatalogId(), sku.getSpuId()).getData();
+            itemVo.setGroups(itemGroupVoList);
+        }, threadPoolExecutor);
+
+        CompletableFuture.allOf(skuInfoEntityCompletableFuture,setImages,setSpuName,setBrandEntity,
+                setCategoryEntity,setSales,setStore,setSaleAttrs,setSpuDesc,setGroups).join();
         return itemVo;
     }
 }

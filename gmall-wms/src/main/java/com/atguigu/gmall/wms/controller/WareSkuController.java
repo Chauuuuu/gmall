@@ -8,6 +8,7 @@ import java.util.Map;
 import com.atguigu.core.bean.PageVo;
 import com.atguigu.core.bean.QueryCondition;
 import com.atguigu.core.bean.Resp;
+import com.atguigu.gmall.wms.vo.SkuLockVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,12 @@ import com.atguigu.gmall.wms.service.WareSkuService;
 public class WareSkuController {
     @Autowired
     private WareSkuService wareSkuService;
+
+    @PostMapping("checkAndLock")
+    public Resp<Object> checkAndLockStock(@RequestBody List<SkuLockVo> skuLockVos){
+        String msg = wareSkuService.checkAndLockStock(skuLockVos);
+        return Resp.ok(msg);
+    }
 
     @GetMapping("{skuId}")
     public Resp<List<WareSkuEntity>> queryWareBySkuId(@PathVariable("skuId") Long skuId){

@@ -33,6 +33,25 @@ public class MemberController {
     @Autowired
     private MemberService memberService;
 
+    @GetMapping("phonecode1")
+    public Resp<Object> sendPhoneCode1(@RequestParam("phoneNum")String phoneNum){
+        memberService.sendMsg(phoneNum);
+        return Resp.ok(null);
+    }
+
+    @GetMapping("query")
+    public Resp<MemberEntity> query(@RequestParam("username")String username,@RequestParam("password")String password){
+        MemberEntity memberEntity = memberService.queryUser(username,password);
+        return Resp.ok(memberEntity);
+    }
+
+    @PostMapping("register")
+    public Resp<Object> register(MemberEntity memberEntity,@RequestParam("code")String code){
+        memberService.register(memberEntity,code);
+        return Resp.ok(null);
+    }
+
+
     /**
      * 列表
      */
@@ -52,7 +71,7 @@ public class MemberController {
     @ApiOperation("详情查询")
     @GetMapping("/info/{id}")
     @PreAuthorize("hasAuthority('ums:member:info')")
-    public Resp<MemberEntity> info(@PathVariable("id") Long id){
+    public Resp<MemberEntity> queryMemberById(@PathVariable("id") Long id){
 		MemberEntity member = memberService.getById(id);
 
         return Resp.ok(member);

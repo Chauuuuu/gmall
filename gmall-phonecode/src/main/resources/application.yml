@@ -1,0 +1,23 @@
+server:
+  port: 8100
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  redis:
+    host: 192.168.175.66
+    port: 6379
+  rabbitmq:
+    host: 192.168.175.66
+    port: 5672
+    virtual-host: /chau
+    username: Chau
+    password: 123123
+
+phonecode:
+  host: http://dingxin.market.alicloudapi.com
+  path: /dx/sendSms
+  method: POST
+  appcode: 2fc02667ffdd435ebe44373623871242
+

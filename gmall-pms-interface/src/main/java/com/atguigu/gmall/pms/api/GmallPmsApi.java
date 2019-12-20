@@ -12,6 +12,9 @@ import java.util.List;
 
 public interface GmallPmsApi {
 
+    @GetMapping("pms/skusaleattrvalue/sku/{skuId}")
+    public Resp<List<SkuSaleAttrValueEntity>> querySkuAttrValuesBySkuId(@PathVariable("skuId")Long skuId);
+
     @PostMapping("pms/spuinfo/{status}")
     public Resp<List<SpuInfoEntity>> querySpuInfoByStatus(@RequestBody QueryCondition condition, @PathVariable("status")Integer status);
 

@@ -8,3 +8,8 @@ spring:
         namespace: 467381b6-8232-4f2b-9e04-7d6aad426f1c
         group: dev
         file-extension: yml
+
+gmall:
+  jwt:
+    pubKeyPath: D:\\workspace-idea\\gmall\\rsa\\rsa.pub
+    cookieName: GMALL_TOKEN # cookie的名称
