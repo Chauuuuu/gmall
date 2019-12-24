@@ -1,8 +1,7 @@
-package com.atguigu.gmall.order.vo;
+package com.atguigu.gmall.oms.vo;
 
 import com.atguigu.gmall.pms.entity.SkuSaleAttrValueEntity;
 import com.atguigu.gmall.sms.vo.SaleVo;
-import com.atguigu.gmall.sms.vo.SkuSaleVo;
 import lombok.Data;
 
 import java.math.BigDecimal;

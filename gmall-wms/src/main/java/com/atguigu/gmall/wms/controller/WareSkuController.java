@@ -38,7 +38,10 @@ public class WareSkuController {
     @PostMapping("checkAndLock")
     public Resp<Object> checkAndLockStock(@RequestBody List<SkuLockVo> skuLockVos){
         String msg = wareSkuService.checkAndLockStock(skuLockVos);
-        return Resp.ok(msg);
+        if (msg == null){
+            return Resp.ok(msg);
+        }
+        return Resp.fail(msg);
     }
 
     @GetMapping("{skuId}")

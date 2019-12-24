@@ -9,4 +9,5 @@ public class SkuLockVo {
     private Integer count;
     private Boolean lockState;
     private Long wareSkuId;
+    private String orderToken;
 }
